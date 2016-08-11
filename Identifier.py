@@ -7,7 +7,6 @@ def get_filenames(dir):
 	filenames = []
 	for root, directories, files in os.walk(dir):
 		for filename in files:
-			#filepath = os.path.join(root, filename)
 			filenames.append(filename)
 	return filenames
 
@@ -27,9 +26,10 @@ def get_numwords(fname):
 		This function gets the number of words in the book
 	'''
 	i = 0
-	f = open(fname, 'r')
-	for word in f:
-		i = i + 1
+	with open(fname, 'r') as file:
+		for word in file:
+			i = i + len(word.split(" "))
+	file.close()
 	return i
 
 def count_instance(w, block):
@@ -42,13 +42,85 @@ def count_instance(w, block):
 			i = i + 1
 	return i
 	
-def count_instance_between(start, end, word, fname):
-	return 0
+def get_rand_startpoint(fname):
+	'''
+		This function gets a random start point in the book (starting number of words)
+	'''
+	numwords = get_numwords(fname)
+	print("Numwords = ",numwords)
+	return random.randint(0,numwords-1500)
+
+def get_block_by_char(fname, start):
+	'''
+		This method returns a word block, but it's a string of characters not words. This is
+		so that we can count characters per line, etc.
+	'''
+	#file = open(fname, 'wc')
+	#numlines = len(file.splitlines())
+	i = 0
+	j = 0
+	outchars = ''
+	startrec = 0
+	with open(fname, 'r') as file:
+		for line in file:
+			for word in line:
+				if(word == ' ') or (word == '\n' ):
+					i = i + 1
+				if(i >= start):
+					for char in word:
+						outchars = outchars + char
+				if(i >= start+1500):
+					return outchars
+	file.close()
+	return outchars
+
+def mean(nums):
+	'''
+		This function gets the arithmetic mean of elements of nums
+	'''
+	return float(sum(nums)) / max(len(nums), 1)
 	
-	
+def get_char_per_line(chars):
+	'''
+		This method returns average number of characters per line
+	'''
+	i = 0
+	numlines = 0
+	charsperline = []
+	for char in chars:
+		i = i + 1
+		if (char == '\n'):
+			charsperline.append(i)
+			numlines = numlines + 1
+			i = 0
+	return mean(charsperline)
+			
+
+def get_num_paragraphs(chars):
+	'''
+		This method counts number of paragraphs in a block. \n\n counts as a character
+	'''
+	i = 0
+	streak = 0
+	for char in chars:
+		if char == '\n':
+			streak = streak + 1
+		else:
+			streak = 0
+		if streak == 2:
+			i = i + 1
+	return i
+
+
 filenames = get_filenames("Book txt")
 authnames = get_authornames(filenames)
 
 fullfilenames = []
 for f in filenames:
 	fullfilenames.append("Book txt\\" + f)
+print(fullfilenames[1])
+print(get_numwords(fullfilenames[1]))
+print(get_rand_startpoint(fullfilenames[1]))
+chars = get_block_by_char(fullfilenames[1], 150)
+print("chars per line = ",get_char_per_line(chars))
+print("num paragraphs = ", get_num_paragraphs(chars))
