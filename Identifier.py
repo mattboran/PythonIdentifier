@@ -1,4 +1,4 @@
-import os, random
+import os, random, re
 
 def get_filenames(dir):
 	'''
@@ -20,21 +20,28 @@ def get_authornames(fnames):
 		auth = title[len(title)-1]
 		authnames.append(auth[0:-4])
 	return authnames
-	
-def get_numwords(fname):
+
+def get_authorname(fname):
+	'''
+		This function gets the name of the author from the filename
+	'''
+	title = fname.rsplit("_")
+	auth = title[len(title)-1]
+	return auth[0:-4]
+
+def get_numwords(file):
 	'''
 		This function gets the number of words in the book
 	'''
 	i = 0
-	with open(fname, 'r') as file:
-		for word in file:
-			i = i + len(word.split(" "))
-	file.close()
+	for line in file:
+		words = line.split()
+		i += len(words)
 	return i
 
 def count_instance(w, block):
 	'''
-		Gets the number of occurances of "w" in block
+		Gets the number of occurances of "w" in block. This is deprecated; it works on word-by-word basis.
 	'''
 	i = 0
 	for word in block:
@@ -42,13 +49,12 @@ def count_instance(w, block):
 			i = i + 1
 	return i
 	
-def get_rand_startpoint(fname):
+def get_rand_startpoint(numwords):
 	'''
 		This function gets a random start point in the book (starting number of words)
 	'''
-	numwords = get_numwords(fname)
-	print("Numwords = ",numwords)
 	return random.randint(0,numwords-1500)
+
 
 def get_block_by_char(fname, start):
 	'''
@@ -110,17 +116,117 @@ def get_num_paragraphs(chars):
 		if streak == 2:
 			i = i + 1
 	return i
+	
+def count_pronouns(chars):
+	'''
+		This function takes an incoming charstream and counts instance of pronouns
+		We will use the Regular Expression package to do this for full matches
+	'''
+	i = 0 
+	text = ''.join(chars).lower()
+	pronouns = re.findall("he|she|it|I|you|we|they|me|us|them|my|your|his|her|its|it\'s|our|their|mine|yours|hers|ours|theirs|myself|yourself|himself|itself|ourselves|yourselves|themselves",text)
+	return len(pronouns)
 
+def count_word(chars, word):
+	'''
+		This function searches for and returns the number of times 'word' appears in the char stream 'chars'
+	'''
+	text = ''.join(chars).lower()
+	words = re.findall(word, text)
+	return len(words)
+	
+def get_first_letters(chars):
+	'''
+		This function returns a charstream containing the first letter of every word in 'chars'
+	'''
+	
+	firstchars = []
+	text = ''.join(chars).lower()
+	
+	for line in text.splitlines():
+		for word in line.split():
+			if(word[0] != '' or word[0] != ' ') and (word[0].isalpha()):
+				firstchars.append(word[0])
+	return firstchars
 
-filenames = get_filenames("Book txt")
-authnames = get_authornames(filenames)
+def count_alliteration(chars):
+	'''
+		This function searches for instances of alliteration - three words or more in a row that start with the same letter.
+	'''
+	allitcount = 0
+	streak = 0
+	firstletters = get_first_letters(chars)
+	current = firstletters[0]
+	for i in range (0,len(firstletters)-1):
+		if(firstletters[i] == firstletters[i+1]):
+			streak += 1
+		if (streak > 1):
+			allitcount += 1
+			streak = 0
+		if(firstletters[i] != firstletters[i+1]):
+			streak = 0
+	return allitcount
+		
+def count_short_words(chars):
+	'''
+		This function counts the number of short words - words with less than 6 chars
+	'''
+	text = ''.join(chars)
+	i = 0
+	for word in text.split():
+		if len(word) <= 5 and (word != '' and word != ' '):
+			i += 1
+	return i
+	
+def count_long_words(chars):
+	'''
+		This function counts the number of long words - words with 6 or more chars
+	'''
+	text = ''.join(chars)
+	i = 0
+	for word in text.split():
+		if len(word) >= 5:
+			i += 1
+	return i
+	
+def count_words_ending_in(char, pattern):
+	'''
+		This function counts the number of words that end in 'pattern'
+	'''
+	text = ''.join(char).lower()
+	i = 0
+	pattern_punctuation = []
+	pattern_punctuation.append(pattern)
+	pattern_punctuation.append(pattern + '.')
+	pattern_punctuation.append(pattern + '"')
+	pattern_punctuation.append(pattern + '\'')
+	pattern_punctuation.append(pattern + '-')
+	pattern_punctuation.append(pattern + '.')
+	pattern_punctuation.append(pattern + '?')
+	pattern_punctuation.append(pattern + ',')
+	pattern_punctuation.append(pattern + '!')
+	pattern_punctuation.append(pattern + '*')
+	pattern_punctuation.append(pattern + ':')
+	pattern_punctuation.append(pattern + ';')
+	
+	for word in text.split():
+		for test in pattern_punctuation:
+			if word.endswith(test):
+				i += 1
+	return i
+	
+def verify_directory(directory):
+	'''
+		This function verifies that the directory is specified as "Directory\" to the program. So we can find the file appropriately when fed from
+		the argv list in FeatureExtractor
+	'''
+	if(directory.endswith('\\')):
+		directory += '\\'
+	elif(directory.endswith('/')):
+		directory[-1] = '\\'
+		directory += '\\'
+	else:
+		directory += '\\'
+	return directory
+		
 
-fullfilenames = []
-for f in filenames:
-	fullfilenames.append("Book txt\\" + f)
-print(fullfilenames[1])
-print(get_numwords(fullfilenames[1]))
-print(get_rand_startpoint(fullfilenames[1]))
-chars = get_block_by_char(fullfilenames[1], 150)
-print("chars per line = ",get_char_per_line(chars))
-print("num paragraphs = ", get_num_paragraphs(chars))
