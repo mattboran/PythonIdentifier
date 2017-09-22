@@ -14,7 +14,7 @@ arg3 - output file
 '''
 
 #featnames is a list of all the names of the features we extracted from our text. This is the "header" of the output .csv
-featnames = ["Paragraphs," ,"CharperLine,", "Pronouns,", "ing,", "Exclamations,","Commas,","Adverbs,","Hyphens,","Alliteration,","ShortRatio,","LongWords,","Author\n"]
+featnames = ["Paragraphs," ,"CharperLine,", "Pronouns,", "ing,", "Exclamations,","Commas,","Adverbs,","Hyphens,","Alliteration,","ShortRatio,","LongWords,", ":", ";","Author\n"]
 
 #directory = verify_directory(sys.argv[1])
 #print("Directory = ", directory)
@@ -61,6 +61,8 @@ for f in fullfilenames:
 		longShortRatio = float(longWords)/float(shortWords)
 		out_line += (str(longShortRatio) + ', ')
 		out_line += (str(longWords) + ', ')
+		out_line += (str(count_word(charstream,":")) + ', ')
+		out_line += (str(count_word(charstream,";")) + ', ')
 		out_line += get_authorname(f)
 		out_line += '\n'
 		out_file.write(out_line)
